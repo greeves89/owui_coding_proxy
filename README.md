@@ -56,7 +56,9 @@ Mehr ist nicht nötig — Auth läuft per Bearer-Token, das die Extension mitsch
 git pull && docker compose up -d --build
 ```
 
-### 2. Reverse-Proxy (nginx)
+### 2. Reverse-Proxy
+
+#### Variante A: nginx
 
 Füge eine `/coder/`-Location zur bestehenden Open-WebUI-Site hinzu:
 
@@ -79,6 +81,16 @@ location /coder/ {
 ```bash
 nginx -t && systemctl reload nginx
 ```
+
+#### Variante B: Traefik
+
+Nimm `docker-compose.traefik.yml` statt `docker-compose.yml` (oder kopier die Labels/Netzwerk-Sektion in dein bestehendes Compose). Domain in der Host-Regel anpassen.
+
+```bash
+docker compose -f docker-compose.traefik.yml up -d --build
+```
+
+Routing: `https://<DOMAIN>/coder/v1/...` → Stripprefix → Container.
 
 ### 3. Coding-Extension konfigurieren
 

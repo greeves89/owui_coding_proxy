@@ -5,6 +5,13 @@ Alle wichtigen Änderungen an diesem Projekt werden hier dokumentiert.
 Format orientiert an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionen folgen [Semantic Versioning](https://semver.org/lang/de/).
 
+## [Unreleased]
+
+### Hinzugefügt
+- Healthcheck im Hauptcontainer (`docker-compose.yml`).
+- Traefik-Variante (`docker-compose.traefik.yml`) für Setups mit Traefik-Reverse-Proxy.
+- Automatische Konvertierung `reasoning_effort` → `reasoning.effort` für Open WebUI / Responses API.
+
 ## [0.1.0] — 2026-05-08
 
 ### Hinzugefügt

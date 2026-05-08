@@ -160,6 +160,16 @@ async def chat_completions(request: Request):
 
     model = payload.get("model", "unknown")
     stream = bool(payload.get("stream", False))
+
+    if "reasoning_effort" in payload:
+        effort = payload.pop("reasoning_effort")
+        if effort and effort not in ("none", "off", None):
+            reasoning = payload.get("reasoning") or {}
+            reasoning.setdefault("effort", effort)
+            payload["reasoning"] = reasoning
+
+    body = json.dumps(payload, ensure_ascii=False).encode()
+
     auth = request.headers.get("authorization", "")
     headers = {
         "Authorization": auth,
