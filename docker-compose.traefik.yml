@@ -1,11 +1,10 @@
 # Traefik-Variante für Setups mit Traefik-Reverse-Proxy.
-# Routing: https://<DOMAIN>/coder/v1/...  →  Stripprefix /coder  →  Container :8000
+# Routing: https://${DOMAIN}/coder/v1/...  →  Stripprefix /coder  →  Container :8000
 #
-# Anpassen:
-#   - DOMAIN unten (Host-Regel)
-#   - networks: shared-network ist hier der Traefik-Netzname
-#   - Falls open-webui in einem anderen Netz liegt: zusätzliches Netz hinzufügen
-#     und UPSTREAM auf den dortigen Hostnamen anpassen.
+# Konfiguration via .env (siehe .env.example):
+#   DOMAIN          = deine Open-WebUI-Domain (z.B. example.com)
+#   TRAEFIK_NETWORK = der Docker-Netzwerkname, in dem Traefik routet
+#   UPSTREAM        = optional, Default http://open-webui:8080
 
 services:
   owui-coder-proxy:
@@ -15,11 +14,11 @@ services:
     environment:
       - UPSTREAM=${UPSTREAM:-http://open-webui:8080}
     networks:
-      - shared-network
+      - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=shared-network"
-      - "traefik.http.routers.owui-coder.rule=Host(`your-domain.example.com`) && PathPrefix(`/coder`)"
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
+      - "traefik.http.routers.owui-coder.rule=Host(`${DOMAIN}`) && PathPrefix(`/coder`)"
       - "traefik.http.routers.owui-coder.entrypoints=https"
       - "traefik.http.routers.owui-coder.tls=true"
       - "traefik.http.routers.owui-coder.middlewares=owui-coder-strip"
@@ -27,5 +26,6 @@ services:
       - "traefik.http.services.owui-coder.loadbalancer.server.port=8000"
 
 networks:
-  shared-network:
+  traefik:
+    name: ${TRAEFIK_NETWORK}
     external: true
