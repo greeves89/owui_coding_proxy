@@ -1,5 +1,25 @@
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 .venv/
+venv/
+.pytest_cache/
+
+# Secrets / local overrides
 .env
+.env.local
+*.local
+
+# Editors / OS
 .DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Build / runtime
+*.log
+dist/
+build/
+*.egg-info/

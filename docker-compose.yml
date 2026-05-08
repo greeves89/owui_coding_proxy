@@ -4,7 +4,7 @@ services:
     container_name: owui-coder-proxy
     restart: unless-stopped
     environment:
-      - UPSTREAM=http://open-webui:8080
+      - UPSTREAM=${UPSTREAM:-http://open-webui:8080}
     ports:
       - "127.0.0.1:4002:8000"
     networks:
