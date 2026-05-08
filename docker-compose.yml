@@ -1,0 +1,16 @@
+services:
+  owui-coder-proxy:
+    build: .
+    container_name: owui-coder-proxy
+    restart: unless-stopped
+    environment:
+      - UPSTREAM=http://open-webui:8080
+    ports:
+      - "127.0.0.1:4002:8000"
+    networks:
+      - default
+
+networks:
+  default:
+    name: openwebui_default
+    external: true
