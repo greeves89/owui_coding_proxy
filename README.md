@@ -108,11 +108,14 @@ Routing: `https://<DOMAIN>/coder/v1/...` → Stripprefix → Container.
 
 ## Endpoints
 
-| Methode | Pfad                       | Funktion                                        |
-|---------|----------------------------|-------------------------------------------------|
-| `POST`  | `/v1/chat/completions`     | OpenAI-kompatibel; übersetzt Stream-Format      |
-| `GET`   | `/v1/models`               | Pass-through zu `${UPSTREAM}/api/models`        |
-| `GET`   | `/health`                  | `{"ok": true}`                                  |
+| Methode | Pfad                       | Funktion                                                      |
+|---------|----------------------------|---------------------------------------------------------------|
+| `POST`  | `/v1/chat/completions`     | OpenAI-kompatibel; übersetzt Responses-SSE → Chat-Completions |
+| `POST`  | `/v1/responses`            | Body-Mapping Responses-API → OWUI; SSE 1:1 durchgereicht      |
+| `GET`   | `/v1/models`               | Pass-through zu `${UPSTREAM}/api/models`                      |
+| `GET`   | `/health`                  | `{"ok": true}`                                                |
+
+> `/v1/responses` ist für Clients gedacht, die den neueren OpenAI-Responses-Endpoint zwingend ansprechen (z.B. **Continue ≤1.2.x** bei `gpt-5*`/`o*`-Modellen, wo `useResponsesApi: false` nicht greift). Request-Body wird auf `messages` / `max_tokens` umgemappt, die SSE-Antwort kommt unverändert vom Upstream zurück.
 
 ---
 

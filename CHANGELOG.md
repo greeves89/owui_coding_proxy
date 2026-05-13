@@ -11,6 +11,9 @@ Versionen folgen [Semantic Versioning](https://semver.org/lang/de/).
 - Healthcheck im Hauptcontainer (`docker-compose.yml`).
 - Traefik-Variante (`docker-compose.traefik.yml`) für Setups mit Traefik-Reverse-Proxy.
 - Automatische Konvertierung `reasoning_effort` → `reasoning.effort` für Open WebUI / Responses API.
+- `POST /v1/responses` für Clients, die den OpenAI-Responses-Endpoint zwingend ansprechen
+  (z.B. Continue ≤1.2.x bei `gpt-5*`/`o*`-Modellen). Body-Mapping
+  `input`/`instructions`/`max_output_tokens` → Chat-Completions-Schema, SSE-Response 1:1.
 
 ## [0.1.0] — 2026-05-08
 
