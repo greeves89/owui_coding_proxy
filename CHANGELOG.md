@@ -7,6 +7,13 @@ Versionen folgen [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-05-22
+
+### Hinzugefügt
+- Strukturiertes Logging mit vollem Stacktrace für Debugging (`DEBUG`-Level).
+- Validierung dass der Request-Body ein JSON-Objekt ist (nicht `null` oder Array).
+- `WARNING`-Log wenn `aiter_lines()` einen Nicht-String-Wert liefert.
+
 ## [0.2.0] — 2026-05-22
 
 ### Hinzugefügt
