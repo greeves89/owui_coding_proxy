@@ -200,6 +200,7 @@ def _responses_body_to_chat(payload: dict) -> dict:
 async def _stream_translated(payload: dict, auth: str, model: str) -> StreamingResponse:
     """Stream OWUI's Responses-SSE, translated into Chat-Completions chunks."""
     body = json.dumps(payload, ensure_ascii=False).encode()
+    logger.debug("→ OWUI payload: %s", body.decode())
     headers = {
         "Authorization": auth,
         "Content-Type": "application/json",
@@ -214,6 +215,7 @@ async def _stream_translated(payload: dict, auth: str, model: str) -> StreamingR
             ) as resp:
                 if resp.status_code >= 400:
                     err_body = await resp.aread()
+                    logger.error("OWUI %d error: %s", resp.status_code, err_body.decode())
                     yield f"data: {json.dumps({'error': err_body.decode('utf-8', 'replace')})}\n\n".encode()
                     yield b"data: [DONE]\n\n"
                     return
