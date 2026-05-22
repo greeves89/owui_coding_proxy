@@ -7,6 +7,12 @@ Versionen folgen [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-05-22
+
+### Behoben
+- OWUI v0.9.5 Bug: `'NoneType' object has no attribute 'startswith'` bei externen API-Calls. Proxy injiziert jetzt `chat_id`, `session_id` und `id` als leere Strings (UUIDs würden einen DB-Lookup und 404 auslösen).
+- httpcore/httpx Logs auf WARNING reduziert — keine mehrzeiligen Debug-Floods mehr.
+
 ## [0.2.1] — 2026-05-22
 
 ### Hinzugefügt
