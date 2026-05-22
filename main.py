@@ -52,7 +52,7 @@ async def _translate_stream(upstream_resp: httpx.Response, model: str) -> AsyncI
     tool_calls_open: dict[int, dict] = {}
 
     async for raw_line in upstream_resp.aiter_lines():
-        if raw_line is None:
+        if not isinstance(raw_line, str):
             continue
         line = raw_line.rstrip("\r")
 
@@ -210,6 +210,9 @@ async def _stream_translated(payload: dict, auth: str, model: str) -> StreamingR
                     return
                 async for chunk in _translate_stream(resp, model):
                     yield chunk
+        except Exception as exc:
+            yield f"data: {json.dumps({'error': str(exc)})}\n\n".encode()
+            yield b"data: [DONE]\n\n"
         finally:
             await client.aclose()
 
@@ -284,7 +287,7 @@ async def chat_completions(request: Request):
         return JSONResponse({"error": "invalid JSON"}, status_code=400)
 
     _normalize_reasoning_effort(payload)
-    model = payload.get("model", "unknown")
+    model = payload.get("model") or "unknown"
     auth = request.headers.get("authorization", "")
 
     if not payload.get("stream"):
