@@ -5,10 +5,17 @@ services:
     restart: unless-stopped
     environment:
       - UPSTREAM=${UPSTREAM:-http://open-webui:8080}
-    ports:
-      - "127.0.0.1:4002:8000"
     networks:
-      - default
+      - proxy-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
+      - "traefik.http.routers.owui-coder.rule=Host(`${DOMAIN}`) && PathPrefix(`/coder`)"
+      - "traefik.http.routers.owui-coder.entrypoints=https"
+      - "traefik.http.routers.owui-coder.tls=true"
+      - "traefik.http.routers.owui-coder.middlewares=owui-coder-strip"
+      - "traefik.http.middlewares.owui-coder-strip.stripprefix.prefixes=/coder"
+      - "traefik.http.services.owui-coder.loadbalancer.server.port=8000"
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3).status==200 else 1)\""]
       interval: 30s
@@ -17,6 +24,6 @@ services:
       start_period: 10s
 
 networks:
-  default:
-    name: ${TRAEFIK_NETWORK:-openwebui_default}
+  proxy-net:
+    name: ${TRAEFIK_NETWORK}
     external: true
