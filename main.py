@@ -163,6 +163,17 @@ async def _translate_stream(upstream_resp: httpx.Response, model: str) -> AsyncI
     yield b"data: [DONE]\n\n"
 
 
+def _inject_owui_fields(payload: dict) -> None:
+    """Inject OWUI-specific fields that external clients omit but OWUI v0.9.5+ requires.
+
+    Without chat_id/session_id/id the internal process_chat path calls .startswith()
+    on None and returns 400. The web UI always sends these; we synthesize them.
+    """
+    payload.setdefault("chat_id", str(uuid.uuid4()))
+    payload.setdefault("session_id", str(uuid.uuid4()))
+    payload.setdefault("id", f"msg-{uuid.uuid4().hex[:16]}")
+
+
 def _normalize_reasoning_effort(payload: dict) -> None:
     """Promote top-level `reasoning_effort` into the nested `reasoning.effort` shape."""
     if "reasoning_effort" not in payload:
@@ -302,6 +313,7 @@ async def chat_completions(request: Request):
         logger.error("Payload is not a dict: type=%s value=%r", type(payload).__name__, payload)
         return JSONResponse({"error": "request body must be a JSON object"}, status_code=400)
 
+    _inject_owui_fields(payload)
     _normalize_reasoning_effort(payload)
     model = payload.get("model") or "unknown"
     auth = request.headers.get("authorization") or ""
@@ -326,6 +338,7 @@ async def responses(request: Request):
         return JSONResponse({"error": "invalid JSON"}, status_code=400)
 
     payload = _responses_body_to_chat(payload)
+    _inject_owui_fields(payload)
     _normalize_reasoning_effort(payload)
     auth = request.headers.get("authorization", "")
 
