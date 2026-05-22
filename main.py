@@ -28,10 +28,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger("owui-proxy")
+logger.setLevel(logging.DEBUG)
 
 UPSTREAM = os.environ.get("UPSTREAM", "http://open-webui:8080")
 UPSTREAM_PATH = "/api/chat/completions"
@@ -167,11 +170,12 @@ def _inject_owui_fields(payload: dict) -> None:
     """Inject OWUI-specific fields that external clients omit but OWUI v0.9.5+ requires.
 
     Without chat_id/session_id/id the internal process_chat path calls .startswith()
-    on None and returns 400. The web UI always sends these; we synthesize them.
+    on None and returns 400. Empty strings satisfy the startswith() check without
+    triggering a DB lookup (a random UUID would cause a 404 from OWUI).
     """
-    payload.setdefault("chat_id", str(uuid.uuid4()))
-    payload.setdefault("session_id", str(uuid.uuid4()))
-    payload.setdefault("id", f"msg-{uuid.uuid4().hex[:16]}")
+    payload.setdefault("chat_id", "")
+    payload.setdefault("session_id", "")
+    payload.setdefault("id", "")
 
 
 def _normalize_reasoning_effort(payload: dict) -> None:
