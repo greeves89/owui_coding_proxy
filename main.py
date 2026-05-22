@@ -16,14 +16,22 @@ Zwei Endpoints, ein Upstream (OWUI `/api/chat/completions`):
     (z.B. Continue ≤1.2.x bei `gpt-5*` / `o*`-Modellen).
 """
 import json
+import logging
 import os
 import time
+import traceback
 import uuid
 from typing import AsyncIterator
 
 import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("owui-proxy")
 
 UPSTREAM = os.environ.get("UPSTREAM", "http://open-webui:8080")
 UPSTREAM_PATH = "/api/chat/completions"
@@ -53,6 +61,7 @@ async def _translate_stream(upstream_resp: httpx.Response, model: str) -> AsyncI
 
     async for raw_line in upstream_resp.aiter_lines():
         if not isinstance(raw_line, str):
+            logger.warning("aiter_lines yielded non-str: type=%s repr=%r", type(raw_line).__name__, raw_line)
             continue
         line = raw_line.rstrip("\r")
 
@@ -211,6 +220,7 @@ async def _stream_translated(payload: dict, auth: str, model: str) -> StreamingR
                 async for chunk in _translate_stream(resp, model):
                     yield chunk
         except Exception as exc:
+            logger.error("Exception in _stream_translated generator:\n%s", traceback.format_exc())
             yield f"data: {json.dumps({'error': str(exc)})}\n\n".encode()
             yield b"data: [DONE]\n\n"
         finally:
@@ -286,13 +296,22 @@ async def chat_completions(request: Request):
     except json.JSONDecodeError:
         return JSONResponse({"error": "invalid JSON"}, status_code=400)
 
+    if not isinstance(payload, dict):
+        logger.error("Payload is not a dict: type=%s value=%r", type(payload).__name__, payload)
+        return JSONResponse({"error": "request body must be a JSON object"}, status_code=400)
+
     _normalize_reasoning_effort(payload)
     model = payload.get("model") or "unknown"
-    auth = request.headers.get("authorization", "")
+    auth = request.headers.get("authorization") or ""
+    logger.debug("chat_completions model=%r stream=%r auth_present=%s", model, payload.get("stream"), bool(auth))
 
-    if not payload.get("stream"):
-        return await _post_nonstream(payload, auth)
-    return await _stream_translated(payload, auth, model)
+    try:
+        if not payload.get("stream"):
+            return await _post_nonstream(payload, auth)
+        return await _stream_translated(payload, auth, model)
+    except Exception:
+        logger.error("Unhandled exception in chat_completions:\n%s", traceback.format_exc())
+        raise
 
 
 @app.post("/v1/responses")
