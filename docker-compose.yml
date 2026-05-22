@@ -18,5 +18,5 @@ services:
 
 networks:
   default:
-    name: openwebui_default
+    name: ${TRAEFIK_NETWORK:-openwebui_default}
     external: true
